@@ -1,137 +1,260 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sahabel Classic Fashion NFT</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #0b0f1a;
-            color: white;
-            margin: 0;
-            padding: 0;
-            text-align: center;
-        }
-        header {
-            padding: 20px;
-            background: #151d33;
-            font-size: 24px;
-            font-weight: bold;
-            color: #fff;
-        }
-        .container {
-            max-width: 800px;
-            margin: 40px auto;
-            background: #1c2541;
-            border-radius: 10px;
-            padding: 20px;
-        }
-        button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        .connect-btn {
-            background: #4CAF50;
-            color: white;
-        }
-        .mint-btn {
-            background: #2196F3;
-            color: white;
-            margin-top: 10px;
-        }
-        .info-box {
-            margin-top: 20px;
-            padding: 10px;
-            background: #111827;
-            border-radius: 8px;
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sahabel Classic Fashion NFT</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" />
+<style>
+  :root{
+    --bg:#0a0f1f; --card:#121a33; --muted:#94a3b8; --text:#e8eefc;
+    --border:#22305b; --accent:#6aa3ff; --ok:#19c37d;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif;
+       background:radial-gradient(1200px 700px at 20% -10%, #0f1a3a 0%, #0a0f1f 60%);
+       color:var(--text)}
+  .wrap{max-width:980px;margin:auto;padding:28px}
+  header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+  .brand{display:flex;gap:12px;align-items:center}
+  .logo{width:38px;height:38px;border-radius:12px;
+        background:radial-gradient(65% 65% at 30% 30%, #6aa3ff, transparent),
+                   radial-gradient(65% 65% at 70% 70%, #19c37d, transparent);
+        box-shadow:0 12px 34px #0007}
+  h1{margin:0;font-size:22px;letter-spacing:.3px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  button{padding:11px 16px;border-radius:12px;border:1px solid var(--border);
+         background:#17244a;color:var(--text);cursor:pointer;transition:.2s}
+  button:hover{transform:translateY(-1px);border-color:#355ab6}
+  .primary{background:linear-gradient(135deg,#2a5bd7,#3a7bff);border-color:#3f6fe8}
+  .danger{background:#3a1320;border-color:#5c1e32}
+  .grid{display:grid;gap:14px}
+  @media(min-width:880px){.grid{grid-template-columns:1.2fr .8fr}}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:18px;
+        padding:18px 18px 14px;box-shadow:0 14px 42px #0007}
+  .pill{display:inline-flex;gap:.6ch;align-items:center;padding:8px 11px;border-radius:999px;
+        border:1px solid var(--border);background:#0e1a3e}
+  .muted{color:var(--muted)}
+  .kv{display:grid;grid-template-columns:140px 1fr;gap:8px 12px}
+  input,select{font:inherit;padding:10px;border-radius:10px;border:1px solid var(--border);
+               background:#0d1430;color:var(--text)}
+  .big{font-size:26px;font-weight:700;margin:6px 0 2px}
+  footer{margin-top:16px;text-align:center;color:#8fa3c9}
+  code{background:#0d1430;border:1px solid var(--border);border-radius:6px;padding:.15rem .4rem}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
 </head>
 <body>
+<div class="wrap">
 
-<header>💎 Sahabel Classic Fashion NFT 💎</header>
-
-<div class="container">
-    <p>Connect your wallet, mint your NFT, and receive fashion shopping discounts based on your NFT type!</p>
-    <button class="connect-btn" id="connectWallet">🔌 Connect Wallet</button>
-    <button class="mint-btn" id="mintNFT" disabled>🪙 Mint NFT</button>
-
-    <div class="info-box">
-        <p><strong>Wallet:</strong> <span id="walletAddress">Not connected</span></p>
-        <p><strong>NFT Type:</strong> <span id="nftType">—</span></p>
-        <p><strong>Shopping Benefit:</strong> <span id="benefit">—</span></p>
+  <header>
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div>
+        <h1>Sahabel Classic Fashion NFT</h1>
+        <div class="muted" style="font-size:13px">Mint a pass · Get shopping benefits by rarity</div>
+      </div>
     </div>
-</div><script>
-// ✅ Step 1: Setup ethers.js & wallet connection
-let provider, signer, account;
+    <div class="row">
+      <button id="btn-connect" class="primary">🔌 Connect Wallet</button>
+      <button id="btn-disconnect" class="danger" disabled>Disconnect</button>
+    </div>
+  </header>
 
-// Replace these after deploying your smart contract on Remix + Sepolia
-const CONTRACT_ADDRESS = "0xYourContractAddressHere";
-const CONTRACT_ABI = []; // Paste your ABI JSON here after deploying contract
+  <div class="grid">
+    <!-- Status / Overview -->
+    <section class="card">
+      <div class="row" style="flex-wrap:wrap;gap:10px">
+        <span class="pill"><b>Status:</b> <span id="status">Not connected</span></span>
+        <span class="pill"><b>Network:</b> <span id="network">—</span></span>
+        <span class="pill"><b>Account:</b> <span id="account">—</span></span>
+        <span class="pill"><b>Balance:</b> <span id="balance">—</span></span>
+      </div>
 
-document.getElementById("connectWallet").addEventListener("click", async () => {
-    if (window.ethereum) {
-        provider = new ethers.BrowserProvider(window.ethereum);
-        await provider.send("eth_requestAccounts", []);
-        signer = await provider.getSigner();
-        account = await signer.getAddress();
-        document.getElementById("walletAddress").innerText = account;
-        document.getElementById("mintNFT").disabled = false;
-    } else {
-        alert("Please install MetaMask!");
+      <div class="card" style="margin-top:12px">
+        <div class="big">Your Holder Box</div>
+        <div class="kv" style="margin-top:8px">
+          <div class="muted">NFT Type</div><div id="nftType">—</div>
+          <div class="muted">Shopping Benefit</div><div id="benefit">—</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Quick actions -->
+    <section class="card">
+      <div class="muted" style="margin-bottom:6px">Quick actions</div>
+      <div class="row">
+        <input id="to" type="text" placeholder="Recipient 0x…" style="flex:1;min-width:220px">
+        <input id="amount" type="number" step="0.0001" min="0" value="0.001" style="width:120px">
+        <button id="btn-send">Send ETH</button>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <select id="network-select">
+          <option value="0xaa36a7">Sepolia Testnet</option>
+          <option value="0x1">Ethereum Mainnet</option>
+          <option value="0x89">Polygon</option>
+          <option value="0x38">BNB Smart Chain</option>
+        </select>
+        <button id="btn-switch">Switch network</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Mint card -->
+  <section class="card" style="margin-top:14px">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <div>
+        <div class="big">Mint Your Pass</div>
+        <div class="muted">Rarity & benefits:</div>
+        <div class="row" style="margin-top:6px">
+          <span class="pill">Common — 20% off</span>
+          <span class="pill">Uncommon — 30% off</span>
+          <span class="pill">Rare — 60% off</span>
+          <span class="pill">Epic — 80% off</span>
+          <span class="pill">Legendary — 100% FREE</span>
+        </div>
+      </div>
+      <button id="btn-mint" class="primary" disabled>🪙 Mint NFT (free demo)</button>
+    </div>
+    <div class="muted" style="margin-top:10px">
+      After deploying your contract, set <code>CONTRACT_ADDRESS</code> and <code>CONTRACT_ABI</code> in this file.
+    </div>
+  </section>
+
+  <!-- How to publish -->
+  <section class="card" style="margin-top:14px">
+    <div class="big">How to publish</div>
+    <ol class="muted" style="margin:6px 0 0 18px">
+      <li>Upload this page as <code>index.html</code> to your GitHub repository.</li>
+      <li>Settings → Pages → <b>Deploy from a branch</b> → <b>main</b> + <b>/ (root)</b>.</li>
+      <li>Site: <code>https://&lt;username&gt;.github.io/&lt;repo&gt;/</code></li>
+    </ol>
+  </section>
+
+  <footer>© Sahabel Classic • Built with <code>ethers.js</code>. No backend required.</footer>
+</div>
+
+<script>
+  // ---------- Helpers ----------
+  const $ = (id)=>document.getElementById(id)
+  const short = (a)=> a ? a.slice(0,6)+'…'+a.slice(-4) : '—'
+
+  let provider, browserProv, signer, account
+
+  const ui = {
+    setStatus:(t)=> $('status').textContent=t,
+    setAccount:(a)=> $('account').textContent=a? short(a):'—',
+    setBalance:(v)=> $('balance').textContent=v??'—',
+    setNetwork:(n)=> $('network').textContent=n??'—',
+    enable:(b)=> { $('btn-disconnect').disabled=!b; $('btn-send').disabled=!b; $('btn-switch').disabled=!b; $('btn-mint').disabled=!b; }
+  }
+
+  async function refreshBasics(){
+    if(!browserProv || !account) return
+    const [net, bal] = await Promise.all([ browserProv.getNetwork(), browserProv.getBalance(account) ])
+    ui.setNetwork(net.name + ' ('+ net.chainId +')')
+    ui.setBalance( ethers.formatEther(bal) + ' ETH')
+  }
+
+  // ---------- Connect / Disconnect ----------
+  async function connect(){
+    try{
+      if(!window.ethereum){ alert('No wallet detected. Install MetaMask.'); return }
+      provider = window.ethereum
+      const accounts = await provider.request({ method:'eth_requestAccounts' })
+      account = ethers.getAddress(accounts[0])
+      browserProv = new ethers.BrowserProvider(provider)
+      signer = await browserProv.getSigner()
+      ui.setStatus('Connected'); ui.setAccount(account); ui.enable(true)
+      await refreshBasics(); await refreshTier()
+      provider.on?.('accountsChanged', ()=>location.reload())
+      provider.on?.('chainChanged', ()=>location.reload())
+    }catch(e){ console.error(e); alert(e.message ?? e); ui.setStatus('Connection failed') }
+  }
+  function disconnect(){
+    provider = browserProv = signer = account = null
+    ui.setStatus('Not connected'); ui.setAccount(null); ui.setBalance('—'); ui.setNetwork('—'); ui.enable(false)
+    $('nftType').textContent='—'; $('benefit').textContent='—'
+  }
+
+  // ---------- Send ETH ----------
+  async function send(){
+    if(!signer) return alert('Connect wallet first')
+    const to = $('to').value.trim(), amount = $('amount').value
+    if(!/^0x[a-fA-F0-9]{40}$/.test(to)) return alert('Enter a valid address')
+    if(+amount <= 0) return alert('Amount must be > 0')
+    try{
+      const tx = await signer.sendTransaction({ to, value: ethers.parseEther(String(amount)) })
+      ui.setStatus('Sending…'); await tx.wait(); ui.setStatus('Sent ✅'); await refreshBasics()
+    }catch(e){ console.error(e); alert(e.message ?? e); ui.setStatus('Send failed') }
+  }
+
+  // ---------- Switch network ----------
+  async function switchNetwork(){
+    if(!provider) return alert('Connect wallet first')
+    const chainId = $('network-select').value
+    try{
+      await provider.request({ method:'wallet_switchEthereumChain', params:[{ chainId }] })
+      await refreshBasics()
+    }catch(e){
+      if(e && e.code === 4902){
+        const presets = {
+          '0xaa36a7': { chainName:'Sepolia', rpcUrls:['https://rpc.sepolia.org'], nativeCurrency:{ name:'ETH', symbol:'ETH', decimals:18 }, blockExplorerUrls:['https://sepolia.etherscan.io'] },
+          '0x89': { chainName:'Polygon', rpcUrls:['https://polygon-rpc.com'], nativeCurrency:{ name:'MATIC', symbol:'MATIC', decimals:18 }, blockExplorerUrls:['https://polygonscan.com'] },
+          '0x38': { chainName:'BNB Smart Chain', rpcUrls:['https://bsc-dataseed.binance.org'], nativeCurrency:{ name:'BNB', symbol:'BNB', decimals:18 }, blockExplorerUrls:['https://bscscan.com'] },
+        }
+        const p = presets[chainId]; if(p) await provider.request({ method:'wallet_addEthereumChain', params:[{ chainId, ...p }] })
+      } else { console.error(e); alert(e.message ?? e) }
     }
-});
+  }
 
-// ✅ Step 2: NFT Minting function
-document.getElementById("mintNFT").addEventListener("click", async () => {
-    if (!CONTRACT_ADDRESS || CONTRACT_ABI.length === 0) {
-        alert("⚠️ Smart contract not connected yet!");
-        return;
-    }
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
-    try {
-        const tx = await contract.mintPublic(); // Free mint function in contract
-        await tx.wait();
-        alert("✅ NFT Minted Successfully!");
-        checkTier();
-    } catch (error) {
-        console.error(error);
-        alert("❌ Mint failed!");
-    }
-});
+  // ---------- Contract glue (set after you deploy) ----------
+  const CONTRACT_ADDRESS = "0xYourContractAddressHere"; // replace after Remix deploy
+  const CONTRACT_ABI = []; // paste ABI JSON here
 
-// ✅ Step 3: Check NFT Tier & Show Benefits
-async function checkTier() {
-    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-    const result = await contract.walletHighestTier(account);
-    const hasNFT = result[0];
-    const tier = Number(result[1]);
+  const TIER_NAMES = ["Common","Uncommon","Rare","Epic","Legendary"]
+  const BENEFITS = {
+    "Common":"20% shopping discount",
+    "Uncommon":"30% shopping discount",
+    "Rare":"60% shopping discount",
+    "Epic":"80% shopping discount",
+    "Legendary":"100% FREE shopping"
+  }
 
-    if (!hasNFT) {
-        document.getElementById("nftType").innerText = "No NFT";
-        document.getElementById("benefit").innerText = "—";
-        return;
-    }
+  async function getUserTier(){
+    if(!browserProv || !account || !CONTRACT_ABI.length || !CONTRACT_ADDRESS.startsWith('0x')) return null
+    const c = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, browserProv)
+    const res = await c.walletHighestTier(account) // (bool has, Tier highest)
+    const has = res[0]; const highest = Number(res[1])
+    if(!has) return { tierName:null, benefit:null }
+    const tierName = TIER_NAMES[highest] ?? 'Unknown'
+    return { tierName, benefit: BENEFITS[tierName] ?? 'Basic access' }
+  }
+  async function refreshTier(){
+    try{
+      const info = await getUserTier()
+      if(!info){ $('nftType').textContent='—'; $('benefit').textContent='—'; return }
+      $('nftType').textContent = info.tierName ?? 'None'
+      $('benefit').textContent = info.benefit ?? '—'
+    }catch(e){ console.error(e) }
+  }
+  async function mintPublic(){
+    if(!signer) return alert('Connect wallet first')
+    if(!CONTRACT_ABI.length || !CONTRACT_ADDRESS.startsWith('0x')) return alert('Set CONTRACT_ADDRESS and CONTRACT_ABI in the code after deploy')
+    try{
+      const c = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer)
+      const tx = await c.mintPublic()
+      ui.setStatus('Minting…'); await tx.wait(); ui.setStatus('Minted ✅')
+      await refreshBasics(); await refreshTier()
+    }catch(e){ console.error(e); alert(e.message ?? e); ui.setStatus('Mint failed') }
+  }
 
-    const tierNames = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
-    const benefits = {
-        "Common": "20% shopping discount",
-        "Uncommon": "30% shopping discount",
-        "Rare": "60% shopping discount",
-        "Epic": "80% shopping discount",
-        "Legendary": "100% FREE shopping"
-    };
-
-    const userTier = tierNames[tier];
-    document.getElementById("nftType").innerText = userTier;
-    document.getElementById("benefit").innerText = benefits[userTier];
-}
+  // ---------- Wire up ----------
+  $('btn-connect').addEventListener('click', async ()=>{ await connect() })
+  $('btn-disconnect').addEventListener('click', ()=>{ disconnect() })
+  $('btn-send').addEventListener('click', send)
+  $('btn-switch').addEventListener('click', switchNetwork)
+  $('btn-mint').addEventListener('click', mintPublic)
 </script>
-
 </body>
-</html>
+            </html>
