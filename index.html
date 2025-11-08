@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sahabel Classic Fashion NFT</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0b0f1a;
+            color: white;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+        header {
+            padding: 20px;
+            background: #151d33;
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+        }
+        .container {
+            max-width: 800px;
+            margin: 40px auto;
+            background: #1c2541;
+            border-radius: 10px;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .connect-btn {
+            background: #4CAF50;
+            color: white;
+        }
+        .mint-btn {
+            background: #2196F3;
+            color: white;
+            margin-top: 10px;
+        }
+        .info-box {
+            margin-top: 20px;
+            padding: 10px;
+            background: #111827;
+            border-radius: 8px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+</head>
+<body>
+
+<header>💎 Sahabel Classic Fashion NFT 💎</header>
+
+<div class="container">
+    <p>Connect your wallet, mint your NFT, and receive fashion shopping discounts based on your NFT type!</p>
+    <button class="connect-btn" id="connectWallet">🔌 Connect Wallet</button>
+    <button class="mint-btn" id="mintNFT" disabled>🪙 Mint NFT</button>
+
+    <div class="info-box">
+        <p><strong>Wallet:</strong> <span id="walletAddress">Not connected</span></p>
+        <p><strong>NFT Type:</strong> <span id="nftType">—</span></p>
+        <p><strong>Shopping Benefit:</strong> <span id="benefit">—</span></p>
+    </div>
+</div><script>
+// ✅ Step 1: Setup ethers.js & wallet connection
+let provider, signer, account;
+
+// Replace these after deploying your smart contract on Remix + Sepolia
+const CONTRACT_ADDRESS = "0xYourContractAddressHere";
+const CONTRACT_ABI = []; // Paste your ABI JSON here after deploying contract
+
+document.getElementById("connectWallet").addEventListener("click", async () => {
+    if (window.ethereum) {
+        provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        account = await signer.getAddress();
+        document.getElementById("walletAddress").innerText = account;
+        document.getElementById("mintNFT").disabled = false;
+    } else {
+        alert("Please install MetaMask!");
+    }
+});
+
+// ✅ Step 2: NFT Minting function
+document.getElementById("mintNFT").addEventListener("click", async () => {
+    if (!CONTRACT_ADDRESS || CONTRACT_ABI.length === 0) {
+        alert("⚠️ Smart contract not connected yet!");
+        return;
+    }
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+    try {
+        const tx = await contract.mintPublic(); // Free mint function in contract
+        await tx.wait();
+        alert("✅ NFT Minted Successfully!");
+        checkTier();
+    } catch (error) {
+        console.error(error);
+        alert("❌ Mint failed!");
+    }
+});
+
+// ✅ Step 3: Check NFT Tier & Show Benefits
+async function checkTier() {
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+    const result = await contract.walletHighestTier(account);
+    const hasNFT = result[0];
+    const tier = Number(result[1]);
+
+    if (!hasNFT) {
+        document.getElementById("nftType").innerText = "No NFT";
+        document.getElementById("benefit").innerText = "—";
+        return;
+    }
+
+    const tierNames = ["Common", "Uncommon", "Rare", "Epic", "Legendary"];
+    const benefits = {
+        "Common": "20% shopping discount",
+        "Uncommon": "30% shopping discount",
+        "Rare": "60% shopping discount",
+        "Epic": "80% shopping discount",
+        "Legendary": "100% FREE shopping"
+    };
+
+    const userTier = tierNames[tier];
+    document.getElementById("nftType").innerText = userTier;
+    document.getElementById("benefit").innerText = benefits[userTier];
+}
+</script>
+
+</body>
+</html>
