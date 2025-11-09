@@ -6,6 +6,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -15,17 +16,16 @@ jobs:
         with:
           node-version: 20
 
-      # --- Create project files on the runner (so it works even if repo has none) ---
+      # Create all project files on the runner (avoids repo setup issues)
       - name: Create folders
         run: |
           mkdir -p contracts scripts
 
       - name: Write contract
         run: |
-          cat > contracts/ShopPass.sol << 'EOF'
+          cat > contracts/ShopPass.sol <<'EOF'
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
-
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.2/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v5.0.2/contracts/access/Ownable.sol";
 
@@ -34,7 +34,6 @@ contract ShopPass is ERC721Enumerable, Ownable {
     uint256 public constant MAX_SUPPLY = 10000;
     uint256 public nextId;
     bool public saleActive = true;
-
     mapping(uint256 => Tier) public tierOf;
     mapping(address => bool) public minted;
 
@@ -73,7 +72,7 @@ EOF
 
       - name: Write deploy script
         run: |
-          cat > scripts/deploy.js << 'EOF'
+          cat > scripts/deploy.js <<'EOF'
 const hre = require("hardhat");
 const fs = require("fs");
 async function main() {
@@ -91,9 +90,9 @@ async function main() {
 main().catch((e)=>{ console.error(e); process.exit(1); });
 EOF
 
-      - name: Write hardhat config & package.json
+      - name: Write hardhat config and package.json
         run: |
-          cat > hardhat.config.js << 'EOF'
+          cat > hardhat.config.js <<'EOF'
 require("@nomicfoundation/hardhat-toolbox");
 const RPC_URL = process.env.RPC_URL || "";
 const PK = process.env.DEPLOYER_PRIVATE_KEY || "";
@@ -102,7 +101,7 @@ module.exports = {
   networks: { bscTestnet: { url: RPC_URL, chainId: 97, accounts: PK ? [PK] : [] } },
 };
 EOF
-          cat > package.json << 'EOF'
+          cat > package.json <<'EOF'
 {
   "name": "scfnft-deploy",
   "private": true,
@@ -117,7 +116,7 @@ EOF
 }
 EOF
 
-      - name: Install deps
+      - name: Install dependencies
         run: npm ci
 
       - name: Deploy to BSC Testnet
